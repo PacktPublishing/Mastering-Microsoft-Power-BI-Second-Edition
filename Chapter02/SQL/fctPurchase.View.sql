@@ -5,7 +5,7 @@ View: BI.fctPurchase
 CREATE OR ALTER VIEW BI.fctPurchase
 AS
 SELECT [Purchase Key]
-      ,[Date Key]
+      ,CAST([Date Key] AS DATETIME) AS [Date Key]
       ,[Supplier Key]
       ,[Stock Item Key]
       ,[WWI Purchase Order ID]
