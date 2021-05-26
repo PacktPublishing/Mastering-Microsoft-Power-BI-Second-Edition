@@ -71,6 +71,7 @@ SELECT  i.[Stock Item Key]
        ,i.Size
        ,i.[Tax Rate]
        ,i.[Unit Price]
+       ,i.[Typical Weight Per Unit]
        ,i.[Valid From]
        ,i.[Valid To]
 FROM    WideWorldImportersDW.Dimension.[Stock Item] i
