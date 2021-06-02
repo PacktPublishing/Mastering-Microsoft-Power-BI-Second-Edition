@@ -1,6 +1,0 @@
-Gross Sales Plan = 
-if([Plan Grain Status] = "Actual Grain",BLANK(),
- SUM('Sales and Margin Plan'[Gross Sales]))
- 
- Gross Sales Var to Plan % = 
-	DIVIDE([Gross Sales Var to Plan],[Gross Sales Plan])
