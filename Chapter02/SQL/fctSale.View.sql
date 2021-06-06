@@ -17,10 +17,9 @@ SELECT [Sale Key]
       ,Quantity
       ,[Unit Price]
       ,[Tax Rate]
-      ,[Total Excluding Tax]
       ,[Tax Amount]
       ,Profit
-      ,[Total Including Tax]
+      ,CAST([Unit Price] - (Profit / Quantity) AS DECIMAL(18,2)) AS [Stock Item Cost]
       ,[Total Dry Items]
       ,[Total Chiller Items]
 FROM WideWorldImportersDW.Fact.Sale
