@@ -12,11 +12,13 @@ SELECT  TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(D
        ,d.[Month] AS [Calendar Month]
        ,d.[Calendar Month Number]
        ,d.[ISO Week Number] AS [Calendar Week in Year]
-       ,CASE WHEN d.[Calendar Month Number] = 1 AND d.[ISO Week Number] > 50 THEN CAST((DATEPART(YYYY,d.[Date])-1) AS [CHAR](4)) + '-Wk' + CAST(d.[ISO Week Number] AS [CHAR](2))
-        ELSE CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + '-Wk' + CAST(d.[ISO Week Number] AS [CHAR](2)) END AS [Calendar Week Number in Year]
-       ,TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(DATEPART(M,d.[Date]) AS [VARCHAR](2)),2) AS INT) AS [Calendar Year Month Number]
-       ,d.[ISO Week Number] AS [Calendar Year Week Number]
        ,TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + '-' + FORMAT(d.[Date], 'MMM') AS CHAR) AS [Calendar Yr-Mo]
+       ,TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + '-Q' + CAST(DATEPART(q,d.[Date]) AS CHAR) AS CHAR) AS [Calendar Yr-Qtr]
+       ,CASE WHEN d.[Calendar Month Number] = 1 AND d.[ISO Week Number] > 50 THEN CAST((DATEPART(YYYY,d.[Date])-1) AS [CHAR](4)) + '-Wk' + CAST(d.[ISO Week Number] AS [CHAR](2))
+        ELSE CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + '-Wk' + CAST(d.[ISO Week Number] AS [CHAR](2)) END AS [Calendar Yr-Wk]
+       ,CAST(CAST(DATEPART(YYYY,d.[Date]) AS CHAR(4)) + CAST(FORMAT(d.[ISO Week Number],'00') AS [CHAR](2)) AS INT) AS [Calendar Yr-Wk Sort]
+       ,TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(DATEPART(M,d.[Date]) AS [VARCHAR](2)),2) AS INT) AS [Calendar Yr-Mo Sort]
+       ,d.[ISO Week Number] AS [Calendar Year Week Number]
        ,CASE WHEN YEAR(d.[Date]) = YEAR(CURRENT_TIMESTAMP) THEN 'Current Calendar Year'
              WHEN YEAR(d.[Date]) = YEAR(CURRENT_TIMESTAMP) - 1 THEN 'Prior Calendar Year'
              WHEN YEAR(d.[Date]) = YEAR(CURRENT_TIMESTAMP) - 2 THEN '2 Yrs Prior Calendar Year'
