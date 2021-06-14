@@ -1,0 +1,69 @@
+//Time Aggregations Calculated Group
+CY: CALCULATE(
+    SELECTEDMEASURE(),
+    FILTER(ALL('Date'),
+        'Date'[Calendar Year] = MAX('Date'[Calendar Year]) && 
+        'Date'[Date] >= MIN('Date'[Date]) &&
+        'Date'[Date] <= MAX('Date'[Date]))
+    )
+	
+PY: CALCULATE(SELECTEDMEASURE(),
+    SAMEPERIODLASTYEAR('Date'[Date]))
+
+YOY: VAR CurrentMeasure = CALCULATE(
+    SELECTEDMEASURE(),
+    'Time Aggregations'[Period] = "CY")
+VAR PriorMeasure = CALCULATE(
+    SELECTEDMEASURE(),
+    'Time Aggregations'[Period] = "PY")
+RETURN
+    IF(CurrentMeasure = BLANK() || PriorMeasure = BLANK(),
+        BLANK(),
+        CurrentMeasure - PriorMeasure)
+		
+YOY%: DIVIDE(
+    CALCULATE(
+        SELECTEDMEASURE(),
+        'Time Aggregations'[Period]="YOY"
+    ),
+    CALCULATE(
+        SELECTEDMEASURE(),
+        'Time Aggregations'[Period]="PY"
+    )
+)	
+
+// Date Intelligence Calculations
+Current: SELECTEDMEASURE()
+
+Yesterday: CALCULATE(
+    SELECTEDMEASURE(),
+    FILTER(ALL('Date'),'Date'[Date] = TODAY()-1)
+    )
+
+Today:  CALCULATE(
+    SELECTEDMEASURE(),
+    FILTER(ALL('Date'),'Date'[Date] = TODAY())
+    )
+
+WTD: CALCULATE(
+    SELECTEDMEASURE(),
+    FILTER(ALL('Date'),'Date'[Calendar Year Week Number] = MAX('Date'[Calendar Year Week Number]) && 
+        'Date'[Date] <= MAX('Date'[Date]))
+)
+
+MTD: CALCULATE(
+    SELECTEDMEASURE(),
+    DATESMTD( 'Date'[Date] )
+)
+
+QTD: CALCULATE(
+    SELECTEDMEASURE(),
+    DATESQTD( 'Date'[Date] )
+)
+
+YTD: CALCULATE(
+    SELECTEDMEASURE(),
+    DATESYTD('Date'[Date])
+)
+
+	
