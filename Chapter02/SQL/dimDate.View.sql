@@ -5,20 +5,24 @@ View: BI.dimDate
 
 CREATE OR ALTER VIEW BI.dimDate
 AS
-SELECT  TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(DATEPART(M,d.[Date]) AS [VARCHAR](2)),2) + RIGHT('0' + CAST(DATEPART(D,d.[Date]) AS [VARCHAR](2)),2) AS INT) AS [Date Key]
+SELECT  TRY_CAST(CAST(DATEPART(YEAR,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(DATEPART(MONTH,d.[Date]) AS [VARCHAR](2)),2) + RIGHT('0' + CAST(DATEPART(D,d.[Date]) AS [VARCHAR](2)),2) AS INT) AS [Date Key]
        ,d.[Date]
        ,d.[Calendar Year]
        ,d.[Calendar Year Label]
        ,d.[Month] AS [Calendar Month]
+       ,d.[Short Month]
        ,d.[Calendar Month Number]
-       ,d.[ISO Week Number] AS [Calendar Week in Year]
-       ,TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + '-' + FORMAT(d.[Date], 'MMM') AS CHAR) AS [Calendar Yr-Mo]
-       ,TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + '-Q' + CAST(DATEPART(q,d.[Date]) AS CHAR) AS CHAR) AS [Calendar Yr-Qtr]
-       ,CASE WHEN d.[Calendar Month Number] = 1 AND d.[ISO Week Number] > 50 THEN CAST((DATEPART(YYYY,d.[Date])-1) AS [CHAR](4)) + '-Wk' + CAST(d.[ISO Week Number] AS [CHAR](2))
-        ELSE CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + '-Wk' + CAST(d.[ISO Week Number] AS [CHAR](2)) END AS [Calendar Yr-Wk]
-       ,CAST(CAST(DATEPART(YYYY,d.[Date]) AS CHAR(4)) + CAST(FORMAT(d.[ISO Week Number],'00') AS [CHAR](2)) AS INT) AS [Calendar Yr-Wk Sort]
-       ,TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(DATEPART(M,d.[Date]) AS [VARCHAR](2)),2) AS INT) AS [Calendar Yr-Mo Sort]
-       ,d.[ISO Week Number] AS [Calendar Year Week Number]
+       ,DATEPART(WEEK, d.[Date]) AS [Calendar Week Number in Year]
+       ,'Wk' + CAST(d.[ISO Week Number] AS [CHAR](2)) AS [Calendar Week in Year]
+       ,TRY_CAST(CAST(DATEPART(YEAR,d.[Date]) AS [CHAR](4)) + '-Q' + CAST(DATEPART(QUARTER,d.[Date]) AS CHAR) AS CHAR) AS [Calendar Yr-Qtr]
+       ,CAST(CAST(DATEPART(YEAR,d.[Date]) AS CHAR(4)) + CAST(FORMAT(DATEPART(QUARTER,d.[Date]),'00') AS [CHAR](2)) AS INT) AS [Calendar Yr-Qtr Sort]
+       ,TRY_CAST(CAST(DATEPART(YEAR,d.[Date]) AS [CHAR](4)) + '-' + FORMAT(d.[Date], 'MMM') AS CHAR) AS [Calendar Yr-Mo]
+       ,TRY_CAST(CAST(DATEPART(YEAR,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(DATEPART(MONTH,d.[Date]) AS [VARCHAR](2)),2) AS INT) AS [Calendar Yr-Mo Sort]
+       ,CAST(DATEPART(YEAR,d.[Date]) AS [CHAR](4)) + '-Wk' + CAST(d.[ISO Week Number] AS [CHAR](2)) AS [Calendar Yr-Wk]
+       ,CAST(CAST(DATEPART(YEAR,d.[Date]) AS CHAR(4)) + CAST(FORMAT(d.[ISO Week Number],'00') AS [CHAR](2)) AS INT) AS [Calendar Yr-Wk Sort]
+       ,DENSE_RANK() OVER ( ORDER BY DATEPART(YEAR, d.[Date]), DATEPART(MONTH, d.[Date])) AS [Calendar Year Month Number]
+       ,DENSE_RANK() OVER ( ORDER BY DATEPART(YEAR, d.[Date]), DATEPART(WEEK, d.[Date]) )AS [Calendar Year Week Number]
+       ,d.[ISO Week Number] 
        ,CASE WHEN YEAR(d.[Date]) = YEAR(CURRENT_TIMESTAMP) THEN 'Current Calendar Year'
              WHEN YEAR(d.[Date]) = YEAR(CURRENT_TIMESTAMP) - 1 THEN 'Prior Calendar Year'
              WHEN YEAR(d.[Date]) = YEAR(CURRENT_TIMESTAMP) - 2 THEN '2 Yrs Prior Calendar Year'
@@ -38,14 +42,49 @@ SELECT  TRY_CAST(CAST(DATEPART(YYYY,d.[Date]) AS [CHAR](4)) + RIGHT('0' + CAST(D
              ELSE 'Other Calendar Week'
         END AS [Calendar Week Status]
        ,DATEPART(q,d.[Date]) AS [Quarter]
-       ,CASE WHEN DATENAME(qq,d.[Date]) = 1 THEN 'First'
-             WHEN DATENAME(qq,d.[Date]) = 2 THEN 'Second'
-             WHEN DATENAME(qq,d.[Date]) = 3 THEN 'Third'
-             WHEN DATENAME(qq,d.[Date]) = 4 THEN 'Fourth'
+       ,CASE WHEN DATENAME(QUARTER,d.[Date]) = 1 THEN 'First'
+             WHEN DATENAME(QUARTER,d.[Date]) = 2 THEN 'Second'
+             WHEN DATENAME(QUARTER,d.[Date]) = 3 THEN 'Third'
+             WHEN DATENAME(QUARTER,d.[Date]) = 4 THEN 'Fourth'
          END AS [Quarter Name]
+       ,DENSE_RANK() OVER ( ORDER BY DATEPART(YEAR, d.[Date]), DATEPART(q, d.[Date]) )AS [Calendar Year Quarter Number]
+       ,DATEADD(YEAR, -1, d.[Date]) AS [Prior Calendar Year Date]
+       ,DATEADD(MONTH, -1, d.[Date]) AS [Prior Calendar Month Date]
+       ,DATEADD(WEEK, -1, d.[Date]) AS [Prior Calendar Week Date]
+       --,d.[Date Number]
+       --,d.[Fiscal Quarter]
+       --,d.[Fiscal Period]
+       ,DATEADD(DAY, 7 - (DATEPART(WEEKDAY, d.[Date])), d.[Date]) AS [Calendar Week Ending Date]
+       ,DATEPART(WEEKDAY,d.[Date]) AS [Weekday Sort]
+       ,LEFT(DATENAME(WEEKDAY,d.[Date]),3) AS [Weekday Abbr]
+       ,DATENAME(WEEKDAY,d.[Date]) AS [Weekday]
+       --,d.[Fiscal Yr-Wk Sort]
+       --,d.[Fiscal Yr-Wk]
+       --,d.[Fiscal Yr-Qtr]
+       --,d.[Fiscal Yr-Period]
+       --,d.[Fiscal Yr-Period Sort]
        ,d.[Fiscal Year]
        ,d.[Fiscal Year Label]
-       ,DATEADD (YEAR, -1, CAST(CURRENT_TIMESTAMP AS DATE)) AS 'One Year Prior Date'
+       ,d.[Fiscal Month Number]
+       ,d.[Fiscal Month Label] AS [Fiscal Yr-Mo]
+       --,d.[Fiscal Week Sort]
+       --,d.[Fiscal Yr-Qtr Sort]
+       --,d.[Fiscal Date Last Year]
+       --,d.[Fiscal Week Sequence]
+       --,d.[Fiscal Week of Period]
+       --,d.[Full Date Description]
+       --,d.[Day Number in Calendar Month]
+       --,d.[Day Number in Calendar Year]
+       --,d.[Calendar Quarter in Year]
+       --,d.[Calendar Quarter Number in Year]
+       ,CASE DATENAME(WEEKDAY,d.[Date]) WHEN 'Saturday' THEN 1
+                                        WHEN 'Sunday'   THEN 1
+                                        ELSE 0 END AS [Weekday Indicator]
+       --,d.[Holiday Indicator]
+       --,d.[Calendar Week in Month]
+       ,DATEADD (YEAR, -1, CAST(CURRENT_TIMESTAMP AS DATE)) AS [One Year Prior Date]
+       --,d.[DST Flag]
+       ,EOMONTH(d.[Date]) AS [Calendar Month Ending Date]
        ,CASE WHEN DATEDIFF(MONTH, d.[Date], CAST(CURRENT_TIMESTAMP AS DATE)) = 0 THEN 'Current Calendar Month'
              WHEN DATEDIFF(MONTH, d.[Date], CAST(CURRENT_TIMESTAMP AS DATE)) IN ( 1, 2, 3 ) THEN 'Trailing 1-3 Calendar Months'
              WHEN DATEDIFF(MONTH, d.[Date], CAST(CURRENT_TIMESTAMP AS DATE)) IN ( 4, 5, 6 ) THEN 'Trailing 4-6 Calendar Months'
